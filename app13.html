@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador de Impresiones - Variantes de Precio</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --border-radius: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .price-variant-selector {
+            background-color: var(--light-color);
+            padding: 15px;
+            margin: 20px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .variant-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .variant-option {
+            padding: 15px;
+            border: 2px solid #bdc3c7;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .variant-option.selected {
+            border-color: var(--warning-color);
+            background-color: rgba(243, 156, 18, 0.1);
+        }
+        
+        .variant-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+        
+        .variant-description {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: #34495e;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background-color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 25px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .section-title {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #bdc3c7;
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .summary {
+            background: linear-gradient(135deg, var(--dark-color), #34495e);
+            color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .summary-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .total {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--accent-color);
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .faz-section {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .faz-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .faz-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .section-icon {
+            width: 30px;
+            height: 30px;
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .section-subtitle {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .notification {
+            padding: 10px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: 4px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        .resumen-reserva {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .resumen-reserva-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background-color: #ecf0f1;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 50%;
+            transition: width 0.5s;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background-color: #bdc3c7;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        
+        .step.active .step-number {
+            background-color: var(--primary-color);
+        }
+        
+        .step.completed .step-number {
+            background-color: var(--success-color);
+        }
+
+        .price-info {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .tamaño-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tamaño-option {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tamaño-option.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(52, 152, 219, 0.1);
+            font-weight: bold;
+        }
+
+        .price-list {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+
+        .price-list-title {
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .price-table th {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .price-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .price-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .variant-highlight {
+            background-color: rgba(243, 156, 18, 0.2) !important;
+            font-weight: bold;
+        }
+        
+        .category-title {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            margin-top: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .anillado-price {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .anillado-price h4 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        
+        .anillado-price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cotizador de Impresiones</h1>
+            <p class="description">Selecciona la variante de precios y configura tus impresiones para obtener un presupuesto personalizado</p>
+        </header>
+
+        <!-- Selector de variantes de precio -->
+        <div class="price-variant-selector">
+            <h3>Selecciona la variante de precios:</h3>
+            <div class="variant-options">
+                <div class="variant-option selected" data-variant="1">
+                    <div class="variant-name">Precio 1</div>
+                    <div class="variant-description">Precios estándar de mercado</div>
+                </div>
+                <div class="variant-option" data-variant="2">
+                    <div class="variant-name">Precio 2</div>
+                    <div class="variant-description">Precios premium con mejor calidad</div>
+                </div>
+                <div class="variant-option" data-variant="3">
+                    <div class="variant-name">Precio 3</div>
+                    <div class="variant-description">Precios económicos</div>
+                </div>
+                <div class="variant-option" data-variant="4">
+                    <div class="variant-name">Precio 4</div>
+                    <div class="variant-description">Precios para grandes volúmenes</div>
+                </div>
+                <div class="variant-option" data-variant="5">
+                    <div class="variant-name">Precio 5</div>
+                    <div class="variant-description">Precios empresariales</div>
+                </div>
+                <div class="variant-option" data-variant="6">
+                    <div class="variant-name">Precio 6</div>
+                    <div class="variant-description">Precios especiales</div>
+                </div>
+            </div>
+            <input type="hidden" id="price-variant" value="1">
+        </div>
+
+        <!-- Lista de precios de la variante seleccionada -->
+        <div class="price-list" id="price-list">
+            <h4 class="price-list-title">Lista de Precios - Variante <span id="variant-title">1</span></h4>
+            <div id="price-list-content">
+                <!-- Los precios se cargarán dinámicamente desde el JSON -->
+                <p style="text-align: center; padding: 20px;">Cargando lista de precios...</p>
+            </div>
+        </div>
+        
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div>Blanco y Negro</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div>Color</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="blanco-negro">Blanco y Negro</div>
+            <div class="tab" data-tab="color">Color</div>
+        </div>
+        
+        <div class="tab-content active" id="blanco-negro">
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">B/N</div>
+                    <h2 class="section-title">Impresiones Blanco y Negro - Variante <span id="variant-indicator-bn">1</span></h2>
+                </div>
+                <p class="section-subtitle">Configura las opciones para tus impresiones en blanco y negro</p>
+                
+                <div class="form-group">
+                    <label>Tamaño:</label>
+                    <div class="tamaño-selector">
+                        <div class="tamaño-option selected" data-tamaño="a4">A4</div>
+                        <div class="tamaño-option" data-tamaño="a3">A3</div>
+                    </div>
+                    <input type="hidden" id="bw-tamaño" value="a4">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bw-gramaje">Gramaje del papel:</label>
+                    <select id="bw-gramaje">
+                        <!-- Opciones se cargarán dinámicamente -->
+                    </select>
+                </div>
+                
+                <div class="faz-section">
+                    <div class="faz-option">
+                        <div class="faz-title">Simple Faz</div>
+                        <div class="price-info" id="bw-simple-price">Precio: -</div>
+                        <div class="form-group">
+                            <label for="bw-simple-cantidad">Cantidad de hojas:</label>
+                            <input type="number" id="bw-simple-cantidad" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="faz-option">
+                        <div class="faz-title">Doble Faz</div>
+                        <div class="price-info" id="bw-doble-price">Precio: -</div>
+                        <div class="form-group">
+                            <label for="bw-doble-cantidad">Cantidad de hojas:</label>
+                            <input type="number" id="bw-doble-cantidad" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary">
+                <h2 class="summary-title">Resumen Blanco y Negro</h2>
+                
+                <div class="summary-item">
+                    <span>Simple Faz:</span>
+                    <span id="resumen-bw-simple">$0</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Doble Faz:</span>
+                    <span id="resumen-bw-doble">$0</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Total Hojas:</span>
+                    <span id="resumen-bw-hojas">0</span>
+                </div>
+                
+                <div class="summary-item total">
+                    <span>Total B/N:</span>
+                    <span id="resumen-bw-total">$0</span>
+                </div>
+                
+                <button class="btn btn-secondary" id="reservar-bn">Reservar y Continuar a Color</button>
+                
+                <div class="notification" id="notification-bn">
+                    ¡Impresiones en Blanco y Negro reservadas correctamente!
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="color">
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon" style="background-color: #e74c3c;">COL</div>
+                    <h2 class="section-title">Impresiones Color - Variante <span id="variant-indicator-color">1</span></h2>
+                </div>
+                <p class="section-subtitle">Configura las opciones para tus impresiones a color</p>
+                
+                <div class="form-group">
+                    <label>Tamaño:</label>
+                    <div class="tamaño-selector">
+                        <div class="tamaño-option selected" data-tamaño="a4">A4</div>
+                        <div class="tamaño-option" data-tamaño="a3">A3</div>
+                    </div>
+                    <input type="hidden" id="color-tamaño" value="a4">
+                </div>
+                
+                <div class="form-group">
+                    <label for="color-gramaje">Gramaje del papel:</label>
+                    <select id="color-gramaje">
+                        <!-- Opciones se cargarán dinámicamente -->
+                    </select>
+                </div>
+                
+                <div class="faz-section">
+                    <div class="faz-option">
+                        <div class="faz-title">Simple Faz</div>
+                        <div class="price-info" id="color-simple-price">Precio: -</div>
+                        <div class="form-group">
+                            <label for="color-simple-cantidad">Cantidad de hojas:</label>
+                            <input type="number" id="color-simple-cantidad" min="0" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="faz-option">
+                        <div class="faz-title">Doble Faz</div>
+                        <div class="price-info" id="color-doble-price">Precio: -</div>
+                        <div class="form-group">
+                            <label for="color-doble-cantidad">Cantidad de hojas:</label>
+                            <input type="number" id="color-doble-cantidad" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="anillado">
+                        <label for="anillado">Incluir anillado</label>
+                    </div>
+                    
+                    <div id="anillado-options" class="hidden">
+                        <div class="form-group">
+                            <label for="tipo-anillado">Tipo de anillado:</label>
+                            <select id="tipo-anillado">
+                                <option value="pequeño">Pequeño (hasta 50 hojas) - $0</option>
+                                <option value="mediano">Mediano (51-100 hojas) - $0</option>
+                                <option value="grande">Grande (101-200 hojas) - $0</option>
+                                <option value="mas_grande">Más Grande (201-500 hojas) - $0</option>
+                                <option value="gigante">Gigante (500+ hojas) - $0</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary">
+                <h2 class="summary-title">Resumen Completo</h2>
+                
+                <div class="resumen-reserva">
+                    <div class="resumen-reserva-title">Reserva Blanco y Negro</div>
+                    <div class="summary-item">
+                        <span>Total B/N:</span>
+                        <span id="reserva-bn-total">$0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Hojas B/N:</span>
+                        <span id="reserva-bn-hojas">0</span>
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Color Simple Faz:</span>
+                    <span id="resumen-color-simple">$0</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Color Doble Faz:</span>
+                    <span id="resumen-color-doble">$0</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Total Hojas Color:</span>
+                    <span id="resumen-color-hojas">0</span>
+                </div>
+                
+                <div class="summary-item">
+                    <span>Anillado:</span>
+                    <span id="resumen-anillado">$0</span>
+                </div>
+                
+                <div class="summary-item total">
+                    <span>Total General:</span>
+                    <span id="resumen-total">$0</span>
+                </div>
+                
+                <button class="btn" id="calcular-final">Calcular Cotización Final</button>
+                
+                <div class="notification" id="notification-color">
+                    ¡Cotización final calculada correctamente!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar precios desde archivo JSON
+        let precios = {};
+        let currentVariant = "1";
+        
+        async function cargarPrecios() {
+            try {
+                const resp = await fetch("preciosani.json");
+                precios = await resp.json();
+                init();
+            } catch (error) {
+                console.error('Error al cargar los precios:', error);
+                alert('Error al cargar los precios. Por favor, verifica que el archivo preciosani.json exista.');
+            }
+        }
+
+        cargarPrecios();        
+        
+        // Variables globales
+        let reservaBn = {
+            total: 0,
+            hojas: 0,
+            tamaño: "a4",
+            variant: "1"
+        };
+        
+        // Elementos del DOM
+        const variantInput = document.getElementById('price-variant');
+        const variantTitle = document.getElementById('variant-title');
+        const variantIndicatorBn = document.getElementById('variant-indicator-bn');
+        const variantIndicatorColor = document.getElementById('variant-indicator-color');
+        const priceListContent = document.getElementById('price-list-content');
+        
+        const tamañoBwInput = document.getElementById('bw-tamaño');
+        const gramajeBw = document.getElementById('bw-gramaje');
+        const cantidadBwSimple = document.getElementById('bw-simple-cantidad');
+        const cantidadBwDoble = document.getElementById('bw-doble-cantidad');
+        const bwSimplePrice = document.getElementById('bw-simple-price');
+        const bwDoblePrice = document.getElementById('bw-doble-price');
+        
+        const resumenBwSimple = document.getElementById('resumen-bw-simple');
+        const resumenBwDoble = document.getElementById('resumen-bw-doble');
+        const resumenBwHojas = document.getElementById('resumen-bw-hojas');
+        const resumenBwTotal = document.getElementById('resumen-bw-total');
+        
+        const tamañoColorInput = document.getElementById('color-tamaño');
+        const gramajeColor = document.getElementById('color-gramaje');
+        const cantidadColorSimple = document.getElementById('color-simple-cantidad');
+        const cantidadColorDoble = document.getElementById('color-doble-cantidad');
+        const colorSimplePrice = document.getElementById('color-simple-price');
+        const colorDoblePrice = document.getElementById('color-doble-price');
+        
+        const anilladoCheckbox = document.getElementById('anillado');
+        const anilladoOptions = document.getElementById('anillado-options');
+        const tipoAnillado = document.getElementById('tipo-anillado');
+        
+        const reservaBnTotal = document.getElementById('reserva-bn-total');
+        const reservaBnHojas = document.getElementById('reserva-bn-hojas');
+        const resumenColorSimple = document.getElementById('resumen-color-simple');
+        const resumenColorDoble = document.getElementById('resumen-color-doble');
+        const resumenColorHojas = document.getElementById('resumen-color-hojas');
+        const resumenAnillado = document.getElementById('resumen-anillado');
+        const resumenTotal = document.getElementById('resumen-total');
+        
+        const btnReservarBn = document.getElementById('reservar-bn');
+        const btnCalcularFinal = document.getElementById('calcular-final');
+        const notificationBn = document.getElementById('notification-bn');
+        const notificationColor = document.getElementById('notification-color');
+        
+        // Configurar selectores de variante
+        function setupVariantSelectors() {
+            const variantOptions = document.querySelectorAll('.variant-option');
+            
+            variantOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const variant = this.getAttribute('data-variant');
+                    
+                    // Remover selección de otras opciones
+                    variantOptions.forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Seleccionar la opción actual
+                    this.classList.add('selected');
+                    
+                    // Actualizar variante actual
+                    currentVariant = variant;
+                    variantInput.value = variant;
+                    variantTitle.textContent = variant;
+                    variantIndicatorBn.textContent = variant;
+                    variantIndicatorColor.textContent = variant;
+                    
+                    // Actualizar lista de precios
+                    updatePriceList(variant);
+                    
+                    // Actualizar opciones de gramaje
+                    actualizarOpcionesGramaje();
+                    
+                    // Actualizar precios mostrados
+                    actualizarPreciosMostrados();
+                    
+                    // Actualizar precios de anillado
+                    actualizarPreciosAnillado();
+                    
+                    // Recalcular cotizaciones
+                    calcularCotizacionBn();
+                    calcularCotizacionColor();
+                });
+            });
+        }
+        
+        // Actualizar lista de precios de la variante seleccionada
+        function updatePriceList(variant) {
+            const priceListContent = document.getElementById('price-list-content');
+            
+            // Verificar que los precios estén cargados
+            if (!precios || Object.keys(precios).length === 0) {
+                priceListContent.innerHTML = '<p style="text-align: center; padding: 20px;">Cargando lista de precios...</p>';
+                return;
+            }
+            
+            const preciosActuales = precios[variant];
+            if (!preciosActuales) {
+                priceListContent.innerHTML = '<p style="text-align: center; padding: 20px; color: #e74c3c;">No hay precios disponibles para esta variante.</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            // Título con el nombre de la variante
+            html += `<div style="margin-bottom: 20px; text-align: center;">`;
+            html += `<h4 style="color: var(--secondary-color); margin-bottom: 10px;">${preciosActuales.nombre || 'Variante ' + variant}</h4>`;
+            html += `</div>`;
+            
+            // Precios para A4
+            html += `<div class="category-title">Tamaño A4</div>`;
+            
+            // Blanco y Negro A4
+            if (preciosActuales.a4 && preciosActuales.a4.blancoNegro) {
+                html += `<h5 style="margin: 15px 0 10px 0; color: var(--dark-color);">Blanco y Negro</h5>`;
+                html += `<table class="price-table">`;
+                html += `<thead><tr><th>Gramaje</th><th>Simple Faz</th><th>Doble Faz</th></tr></thead>`;
+                html += `<tbody>`;
+                
+                const gramajesBn = Object.keys(preciosActuales.a4.blancoNegro.simple || {});
+                gramajesBn.forEach(gramaje => {
+                    const precioSimple = preciosActuales.a4.blancoNegro.simple[gramaje] || '-';
+                    const precioDoble = preciosActuales.a4.blancoNegro.doble[gramaje] || '-';
+                    
+                    html += `<tr>`;
+                    html += `<td>${gramaje} gr</td>`;
+                    html += `<td>${precioSimple === '-' ? '-' : '$' + precioSimple}</td>`;
+                    html += `<td>${precioDoble === '-' ? '-' : '$' + precioDoble}</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            }
+            
+            // Color A4
+            if (preciosActuales.a4 && preciosActuales.a4.color) {
+                html += `<h5 style="margin: 15px 0 10px 0; color: var(--dark-color);">Color</h5>`;
+                html += `<table class="price-table">`;
+                html += `<thead><tr><th>Gramaje</th><th>Simple Faz</th><th>Doble Faz</th></tr></thead>`;
+                html += `<tbody>`;
+                
+                const gramajesColor = Object.keys(preciosActuales.a4.color.simple || {});
+                gramajesColor.forEach(gramaje => {
+                    const precioSimple = preciosActuales.a4.color.simple[gramaje] || '-';
+                    const precioDoble = preciosActuales.a4.color.doble[gramaje] || '-';
+                    
+                    html += `<tr>`;
+                    html += `<td>${gramaje} gr</td>`;
+                    html += `<td>${precioSimple === '-' ? '-' : '$' + precioSimple}</td>`;
+                    html += `<td>${precioDoble === '-' ? '-' : '$' + precioDoble}</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            }
+            
+            // Precios para A3
+            html += `<div class="category-title" style="margin-top: 25px;">Tamaño A3</div>`;
+            
+            // Blanco y Negro A3
+            if (preciosActuales.a3 && preciosActuales.a3.blancoNegro) {
+                html += `<h5 style="margin: 15px 0 10px 0; color: var(--dark-color);">Blanco y Negro</h5>`;
+                html += `<table class="price-table">`;
+                html += `<thead><tr><th>Gramaje</th><th>Simple Faz</th><th>Doble Faz</th></tr></thead>`;
+                html += `<tbody>`;
+                
+                const gramajesBnA3 = Object.keys(preciosActuales.a3.blancoNegro.simple || {});
+                gramajesBnA3.forEach(gramaje => {
+                    const precioSimple = preciosActuales.a3.blancoNegro.simple[gramaje] || '-';
+                    const precioDoble = preciosActuales.a3.blancoNegro.doble[gramaje] || '-';
+                    
+                    html += `<tr>`;
+                    html += `<td>${gramaje} gr</td>`;
+                    html += `<td>${precioSimple === '-' ? '-' : '$' + precioSimple}</td>`;
+                    html += `<td>${precioDoble === '-' ? '-' : '$' + precioDoble}</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            }
+            
+            // Color A3
+            if (preciosActuales.a3 && preciosActuales.a3.color) {
+                html += `<h5 style="margin: 15px 0 10px 0; color: var(--dark-color);">Color</h5>`;
+                html += `<table class="price-table">`;
+                html += `<thead><tr><th>Gramaje</th><th>Simple Faz</th><th>Doble Faz</th></tr></thead>`;
+                html += `<tbody>`;
+                
+                const gramajesColorA3 = Object.keys(preciosActuales.a3.color.simple || {});
+                gramajesColorA3.forEach(gramaje => {
+                    const precioSimple = preciosActuales.a3.color.simple[gramaje] || '-';
+                    const precioDoble = preciosActuales.a3.color.doble[gramaje] || '-';
+                    
+                    html += `<tr>`;
+                    html += `<td>${gramaje} gr</td>`;
+                    html += `<td>${precioSimple === '-' ? '-' : '$' + precioSimple}</td>`;
+                    html += `<td>${precioDoble === '-' ? '-' : '$' + precioDoble}</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            }
+            
+            // Precios de anillado
+            if (preciosActuales.anillado) {
+                html += `<div class="anillado-price">`;
+                html += `<h4>Precios de Anillado</h4>`;
+                html += `<div class="anillado-price-item">`;
+                html += `<span>Pequeño (hasta 50 hojas):</span>`;
+                html += `<span><strong>$${preciosActuales.anillado.pequeño || 0}</strong></span>`;
+                html += `</div>`;
+                html += `<div class="anillado-price-item">`;
+                html += `<span>Mediano (51-100 hojas):</span>`;
+                html += `<span><strong>$${preciosActuales.anillado.mediano || 0}</strong></span>`;
+                html += `</div>`;
+                html += `<div class="anillado-price-item">`;
+                html += `<span>Grande (101-200 hojas):</span>`;
+                html += `<span><strong>$${preciosActuales.anillado.grande || 0}</strong></span>`;
+                html += `</div>`;
+                html += `<div class="anillado-price-item">`;
+                html += `<span>Más Grande (201-500 hojas):</span>`;
+                html += `<span><strong>$${preciosActuales.anillado.mas_grande || 0}</strong></span>`;
+                html += `</div>`;
+                html += `<div class="anillado-price-item">`;
+                html += `<span>Gigante (500+ hojas):</span>`;
+                html += `<span><strong>$${preciosActuales.anillado.gigante || 0}</strong></span>`;
+                html += `</div>`;
+                html += `</div>`;
+            }
+            
+            priceListContent.innerHTML = html;
+        }
+        
+        // Configurar selectores de tamaño
+        function setupTamañoSelectors() {
+            const tamañoOptions = document.querySelectorAll('.tamaño-option');
+            
+            tamañoOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const section = this.closest('.section');
+                    const tamañoInput = section.querySelector('input[type="hidden"]');
+                    const tamaño = this.getAttribute('data-tamaño');
+                    
+                    // Remover selección de otras opciones en la misma sección
+                    section.querySelectorAll('.tamaño-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Seleccionar la opción actual
+                    this.classList.add('selected');
+                    
+                    // Actualizar el valor del input
+                    tamañoInput.value = tamaño;
+                    
+                    // Actualizar precios mostrados
+                    actualizarPreciosMostrados();
+                    
+                    // Recalcular cotización
+                    if (section.closest('#blanco-negro')) {
+                        calcularCotizacionBn();
+                    } else {
+                        calcularCotizacionColor();
+                    }
+                });
+            });
+        }
+        
+        // Actualizar las opciones de gramaje basadas en lo que existe en el JSON
+        function actualizarOpcionesGramaje() {
+            const preciosActuales = precios[currentVariant];
+            
+            if (!preciosActuales) return;
+            
+            // Actualizar gramajes para B/N
+            if (preciosActuales.a4 && preciosActuales.a4.blancoNegro && preciosActuales.a4.blancoNegro.simple) {
+                const gramajesBn = Object.keys(preciosActuales.a4.blancoNegro.simple);
+                gramajeBw.innerHTML = '';
+                gramajesBn.forEach(gramaje => {
+                    const option = document.createElement('option');
+                    option.value = gramaje;
+                    option.textContent = `${gramaje} gr`;
+                    gramajeBw.appendChild(option);
+                });
+            }
+            
+            // Actualizar gramajes para Color
+            if (preciosActuales.a4 && preciosActuales.a4.color && preciosActuales.a4.color.simple) {
+                const gramajesColor = Object.keys(preciosActuales.a4.color.simple);
+                gramajeColor.innerHTML = '';
+                gramajesColor.forEach(gramaje => {
+                    const option = document.createElement('option');
+                    option.value = gramaje;
+                    option.textContent = `${gramaje} gr`;
+                    gramajeColor.appendChild(option);
+                });
+            }
+        }
+        
+        // Actualizar precios de anillado desde el JSON
+        function actualizarPreciosAnillado() {
+            const preciosActuales = precios[currentVariant];
+            
+            if (!preciosActuales || !preciosActuales.anillado) return;
+            
+            // Actualizar opciones de anillado
+            const anilladoOptionsSelect = document.getElementById('tipo-anillado');
+            if (anilladoOptionsSelect) {
+                anilladoOptionsSelect.innerHTML = '';
+                
+                // Pequeño
+                const optionPequeño = document.createElement('option');
+                optionPequeño.value = 'pequeño';
+                const precioPequeño = preciosActuales.anillado.pequeño || 0;
+                optionPequeño.textContent = `Pequeño (hasta 50 hojas) - $${precioPequeño}`;
+                anilladoOptionsSelect.appendChild(optionPequeño);
+                
+                // Mediano
+                const optionMediano = document.createElement('option');
+                optionMediano.value = 'mediano';
+                const precioMediano = preciosActuales.anillado.mediano || 0;
+                optionMediano.textContent = `Mediano (51-100 hojas) - $${precioMediano}`;
+                anilladoOptionsSelect.appendChild(optionMediano);
+                
+                // Grande (actualizado para 101-200 hojas)
+                const optionGrande = document.createElement('option');
+                optionGrande.value = 'grande';
+                const precioGrande = preciosActuales.anillado.grande || 0;
+                optionGrande.textContent = `Grande (101-200 hojas) - $${precioGrande}`;
+                anilladoOptionsSelect.appendChild(optionGrande);
+                
+                // Más Grande (201-500 hojas)
+                const optionMasGrande = document.createElement('option');
+                optionMasGrande.value = 'mas_grande';
+                const precioMasGrande = preciosActuales.anillado.mas_grande || 0;
+                optionMasGrande.textContent = `Más Grande (201-500 hojas) - $${precioMasGrande}`;
+                anilladoOptionsSelect.appendChild(optionMasGrande);
+                
+                // Gigante (500+ hojas)
+                const optionGigante = document.createElement('option');
+                optionGigante.value = 'gigante';
+                const precioGigante = preciosActuales.anillado.gigante || 0;
+                optionGigante.textContent = `Gigante (500+ hojas) - $${precioGigante}`;
+                anilladoOptionsSelect.appendChild(optionGigante);
+            }
+        }
+        
+        // Actualizar precios mostrados según la variante seleccionada
+        function actualizarPreciosMostrados() {
+            const tamañoBw = tamañoBwInput.value;
+            const tamañoColor = tamañoColorInput.value;
+            const gramajeBwVal = gramajeBw.value;
+            const gramajeColorVal = gramajeColor.value;
+            
+            // Obtener precios actuales según la variante
+            const preciosActuales = precios[currentVariant];
+            
+            // Actualizar precios B/N si existen
+            if (preciosActuales && 
+                preciosActuales[tamañoBw] && 
+                preciosActuales[tamañoBw].blancoNegro && 
+                preciosActuales[tamañoBw].blancoNegro.simple &&
+                preciosActuales[tamañoBw].blancoNegro.simple[gramajeBwVal] &&
+                preciosActuales[tamañoBw].blancoNegro.doble &&
+                preciosActuales[tamañoBw].blancoNegro.doble[gramajeBwVal]) {
+                
+                const precioBwSimple = preciosActuales[tamañoBw].blancoNegro.simple[gramajeBwVal];
+                const precioBwDoble = preciosActuales[tamañoBw].blancoNegro.doble[gramajeBwVal];
+                bwSimplePrice.textContent = `Precio: $${precioBwSimple}`;
+                bwDoblePrice.textContent = `Precio: $${precioBwDoble}`;
+            } else {
+                bwSimplePrice.textContent = `Precio: -`;
+                bwDoblePrice.textContent = `Precio: -`;
+            }
+            
+            // Actualizar precios Color si existen
+            if (preciosActuales && 
+                preciosActuales[tamañoColor] && 
+                preciosActuales[tamañoColor].color && 
+                preciosActuales[tamañoColor].color.simple &&
+                preciosActuales[tamañoColor].color.simple[gramajeColorVal] &&
+                preciosActuales[tamañoColor].color.doble &&
+                preciosActuales[tamañoColor].color.doble[gramajeColorVal]) {
+                
+                const precioColorSimple = preciosActuales[tamañoColor].color.simple[gramajeColorVal];
+                const precioColorDoble = preciosActuales[tamañoColor].color.doble[gramajeColorVal];
+                colorSimplePrice.textContent = `Precio: $${precioColorSimple}`;
+                colorDoblePrice.textContent = `Precio: $${precioColorDoble}`;
+            } else {
+                colorSimplePrice.textContent = `Precio: -`;
+                colorDoblePrice.textContent = `Precio: -`;
+            }
+        }
+        
+        // Configurar tabs
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Remover clase active de todos los tabs y contenidos
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // Agregar clase active al tab y contenido seleccionado
+                    tab.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Actualizar indicador de progreso
+                    updateProgress(tabId);
+                });
+            });
+        }
+        
+        // Actualizar indicador de progreso
+        function updateProgress(activeTab) {
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const progress = document.getElementById('progress');
+            
+            if (activeTab === 'blanco-negro') {
+                step1.classList.add('active');
+                step2.classList.remove('active');
+                step1.classList.remove('completed');
+                progress.style.width = '0%';
+            } else {
+                step1.classList.remove('active');
+                step1.classList.add('completed');
+                step2.classList.add('active');
+                progress.style.width = '100%';
+            }
+        }
+        
+        // Mostrar/ocultar opciones de anillado
+        function setupAnilladoToggle() {
+            anilladoCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    anilladoOptions.classList.remove('hidden');
+                } else {
+                    anilladoOptions.classList.add('hidden');
+                }
+                calcularCotizacionColor();
+            });
+        }
+        
+        // Calcular cotización Blanco y Negro
+        function calcularCotizacionBn() {
+            const tamaño = tamañoBwInput.value;
+            const gramaje = gramajeBw.value;
+            const cantidadSimple = parseInt(cantidadBwSimple.value) || 0;
+            const cantidadDoble = parseInt(cantidadBwDoble.value) || 0;
+            
+            // Obtener precios actuales según la variante
+            const preciosActuales = precios[currentVariant];
+            
+            let precioSimple = 0;
+            let precioDoble = 0;
+            
+            // Verificar si los precios existen en el JSON
+            if (preciosActuales && 
+                preciosActuales[tamaño] && 
+                preciosActuales[tamaño].blancoNegro &&
+                preciosActuales[tamaño].blancoNegro.simple &&
+                preciosActuales[tamaño].blancoNegro.simple[gramaje] &&
+                preciosActuales[tamaño].blancoNegro.doble &&
+                preciosActuales[tamaño].blancoNegro.doble[gramaje]) {
+                
+                // Obtener precios según tamaño y gramaje
+                precioSimple = preciosActuales[tamaño].blancoNegro.simple[gramaje];
+                precioDoble = preciosActuales[tamaño].blancoNegro.doble[gramaje];
+            }
+            
+            // Calcular costo de impresiones
+            const costoSimple = cantidadSimple * precioSimple;
+            const costoDoble = cantidadDoble * precioDoble;
+            
+            // Calcular total de hojas
+            const totalHojas = cantidadSimple + cantidadDoble;
+            
+            // Calcular total
+            const total = costoSimple + costoDoble;
+            
+            // Actualizar resumen
+            resumenBwSimple.textContent = `$${costoSimple}`;
+            resumenBwDoble.textContent = `$${costoDoble}`;
+            resumenBwHojas.textContent = totalHojas;
+            resumenBwTotal.textContent = `$${total}`;
+        }
+        
+        // Calcular cotización Color
+        function calcularCotizacionColor() {
+            const tamaño = tamañoColorInput.value;
+            const gramaje = gramajeColor.value;
+            const cantidadSimple = parseInt(cantidadColorSimple.value) || 0;
+            const cantidadDoble = parseInt(cantidadColorDoble.value) || 0;
+            
+            // Obtener precios actuales según la variante
+            const preciosActuales = precios[currentVariant];
+            
+            let precioSimple = 0;
+            let precioDoble = 0;
+            let costoAnillado = 0;
+            
+            // Verificar si los precios de impresión existen en el JSON
+            if (preciosActuales && 
+                preciosActuales[tamaño] && 
+                preciosActuales[tamaño].color &&
+                preciosActuales[tamaño].color.simple &&
+                preciosActuales[tamaño].color.simple[gramaje] &&
+                preciosActuales[tamaño].color.doble &&
+                preciosActuales[tamaño].color.doble[gramaje]) {
+                
+                // Obtener precios según tamaño y gramaje
+                precioSimple = preciosActuales[tamaño].color.simple[gramaje];
+                precioDoble = preciosActuales[tamaño].color.doble[gramaje];
+            }
+            
+            // Calcular costo de impresiones
+            const costoSimple = cantidadSimple * precioSimple;
+            const costoDoble = cantidadDoble * precioDoble;
+            
+            // Calcular total de hojas
+            const totalHojas = cantidadSimple + cantidadDoble;
+            
+            // Calcular costo de anillado si está seleccionado
+            if (anilladoCheckbox.checked && preciosActuales && preciosActuales.anillado) {
+                const tipoAnilladoSeleccionado = tipoAnillado.value;
+                costoAnillado = preciosActuales.anillado[tipoAnilladoSeleccionado] || 0;
+            }
+            
+            // Calcular subtotal color
+            const subtotalColor = costoSimple + costoDoble;
+            
+            // Verificar si la reserva B/N es de la misma variante
+            let reservaBnValor = 0;
+            if (reservaBn.variant === currentVariant) {
+                reservaBnValor = reservaBn.total;
+            } else {
+                // Si cambió la variante, no se considera la reserva anterior
+                reservaBnValor = 0;
+            }
+            
+            // Calcular total general (reserva B/N + color + anillado)
+            const totalGeneral = reservaBnValor + subtotalColor + costoAnillado;
+            
+            // Actualizar resumen
+            resumenColorSimple.textContent = `$${costoSimple}`;
+            resumenColorDoble.textContent = `$${costoDoble}`;
+            resumenColorHojas.textContent = totalHojas;
+            resumenAnillado.textContent = `$${costoAnillado}`;
+            resumenTotal.textContent = `$${totalGeneral}`;
+        }
+        
+        // Función para reservar Blanco y Negro
+        function setupReservarBn() {
+            btnReservarBn.addEventListener('click', function() {
+                const cantidadSimple = parseInt(cantidadBwSimple.value) || 0;
+                const cantidadDoble = parseInt(cantidadBwDoble.value) || 0;
+                const totalHojas = cantidadSimple + cantidadDoble;
+                const total = parseInt(resumenBwTotal.textContent.replace('$', '')) || 0;
+                const tamaño = tamañoBwInput.value;
+                
+                // Guardar reserva con la variante actual
+                reservaBn = {
+                    total: total,
+                    hojas: totalHojas,
+                    tamaño: tamaño,
+                    variant: currentVariant
+                };
+                
+                // Actualizar resumen en la sección Color
+                reservaBnTotal.textContent = `$${total}`;
+                reservaBnHojas.textContent = totalHojas;
+                
+                // Mostrar notificación
+                notificationBn.style.display = 'block';
+                setTimeout(() => {
+                    notificationBn.style.display = 'none';
+                }, 3000);
+                
+                // Cambiar a la pestaña Color
+                document.querySelector('.tab[data-tab="color"]').click();
+                
+                // Recalcular cotización de color para actualizar el total general
+                calcularCotizacionColor();
+            });
+        }
+        
+        // Mostrar notificación al calcular la cotización final
+        function setupCalcularFinal() {
+            btnCalcularFinal.addEventListener('click', function() {
+                calcularCotizacionColor();
+                notificationColor.style.display = 'block';
+                setTimeout(() => {
+                    notificationColor.style.display = 'none';
+                }, 3000);
+            });
+        }
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Calcular cotización Blanco y Negro cuando cambia cualquier opción
+            [tamañoBwInput, gramajeBw, cantidadBwSimple, cantidadBwDoble].forEach(element => {
+                element.addEventListener('input', calcularCotizacionBn);
+                element.addEventListener('change', calcularCotizacionBn);
+            });
+            
+            // Calcular cotización Color cuando cambia cualquier opción
+            [tamañoColorInput, gramajeColor, cantidadColorSimple, cantidadColorDoble, tipoAnillado].forEach(element => {
+                element.addEventListener('input', calcularCotizacionColor);
+                element.addEventListener('change', calcularCotizacionColor);
+            });
+        }
+        
+        // Inicializar todo
+        function init() {
+            // Verificar si los precios están cargados
+            if (!precios || Object.keys(precios).length === 0) {
+                console.error('Los precios no se cargaron correctamente');
+                return;
+            }
+            
+            setupVariantSelectors();
+            setupTamañoSelectors();
+            setupTabs();
+            setupAnilladoToggle();
+            setupReservarBn();
+            setupCalcularFinal();
+            setupEventListeners();
+            
+            // Actualizar selectores de gramaje basados en lo que existe en el JSON
+            actualizarOpcionesGramaje();
+            
+            // Actualizar precios de anillado
+            actualizarPreciosAnillado();
+            
+            // Actualizar lista de precios
+            updatePriceList(currentVariant);
+            
+            actualizarPreciosMostrados();
+            calcularCotizacionBn();
+            calcularCotizacionColor();
+        }
+    </script>
+</body>
+</html>
