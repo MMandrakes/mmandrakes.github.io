@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador de Impresiones - Opciones de Pago</title>
+    <style>
+        /* Estilos existentes... */
+        
+        /* Nuevos estilos para mostrar las listas utilizadas */
+        .listas-utilizadas {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .listas-title {
+            color: var(--warning-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .lista-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .lista-item:last-child {
+            border-bottom: none;
+        }
+        
+        .lista-nombre {
+            font-weight: 600;
+        }
+        
+        .lista-descripcion {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .info-copias {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            text-align: center;
+            border-left: 3px solid var(--primary-color);
+            font-size: 0.9rem;
+        }
+        
+        .info-copias strong {
+            color: var(--dark-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cotizador de Impresiones</h1>
+            <p class="description">Selecciona el tipo de precio y configura tus impresiones para obtener un presupuesto con opciones de pago</p>
+        </header>
+
+        <!-- Selector de variantes de precio -->
+        <div class="price-variant-selector">
+            <h3>Selección Automática de Precios</h3>
+            <div class="variant-info">
+                El sistema selecciona automáticamente la lista de precios según la cantidad total de copias en Blanco y Negro:<br>
+                • Hasta 50 copias: Lista 1 (Efectivo) y 4 (Tarjeta)<br>
+                • 51-200 copias: Lista 2 (Efectivo) y 5 (Tarjeta)<br>
+                • 201+ copias: Lista 3 (Efectivo) y 6 (Tarjeta)<br>
+                <em>Nota: 1 copia Doble Faz = 2 copias Simple Faz</em>
+            </div>
+            
+            <!-- Mostrar info de copias calculadas -->
+            <div class="info-copias" id="info-copias">
+                <strong>Cálculo de copias:</strong> Simple Faz: <span id="copias-simple">0</span> + Doble Faz: <span id="copias-doble">0</span> = <strong><span id="total-copias">0</span> copias totales</strong>
+            </div>
+            
+            <!-- Mostrar listas seleccionadas automáticamente -->
+            <div class="variant-info" id="listas-seleccionadas">
+                <strong>Listas seleccionadas:</strong><br>
+                • Efectivo: <span id="lista-efectivo">Lista 1</span><br>
+                • Tarjeta: <span id="lista-tarjeta">Lista 4</span>
+            </div>
+            
+            <input type="hidden" id="price-variant" value="1">
+            <input type="hidden" id="price-variant-complementaria" value="4">
+        </div>
+        
+        <!-- Resto del código HTML permanece igual hasta la sección de comparación de precios -->
+        
+        <!-- En la sección de comparación de precios, agregar listas utilizadas -->
+        <div class="price-comparison">
+            <!-- Columna Precio Efectivo -->
+            <div class="price-column effective">
+                <div class="price-column-title">Precio Efectivo</div>
+                <div class="lista-item">
+                    <span>Lista utilizada:</span>
+                    <span id="comparison-lista-efectivo">Lista 1</span>
+                </div>
+                <!-- Resto de los elementos de comparación... -->
+            </div>
+            
+            <!-- Columna Precio Tarjeta -->
+            <div class="price-column card">
+                <div class="price-column-title">Precio Tarjeta</div>
+                <div class="lista-item">
+                    <span>Lista utilizada:</span>
+                    <span id="comparison-lista-tarjeta">Lista 4</span>
+                </div>
+                <!-- Resto de los elementos de comparación... -->
+            </div>
+        </div>
+        
+        <!-- Nueva sección para mostrar las listas utilizadas -->
+        <div class="listas-utilizadas" id="detalle-listas" style="display: none;">
+            <div class="listas-title">Listas de Precios Utilizadas</div>
+            <div class="lista-item">
+                <div>
+                    <span class="lista-nombre">Lista Efectivo:</span><br>
+                    <span class="lista-descripcion" id="desc-lista-efectivo">Lista 1 - Hasta 50 copias</span>
+                </div>
+                <div>
+                    <span id="nombre-lista-efectivo">Lista 1</span>
+                </div>
+            </div>
+            <div class="lista-item">
+                <div>
+                    <span class="lista-nombre">Lista Tarjeta:</span><br>
+                    <span class="lista-descripcion" id="desc-lista-tarjeta">Lista 4 - Hasta 50 copias</span>
+                </div>
+                <div>
+                    <span id="nombre-lista-tarjeta">Lista 4</span>
+                </div>
+            </div>
+            <div class="lista-item">
+                <div>
+                    <span class="lista-nombre">Total copias B/N:</span><br>
+                    <span class="lista-descripcion">Simple Faz + (Doble Faz × 2)</span>
+                </div>
+                <div>
+                    <strong id="detalle-total-copias">0</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resto del código HTML... -->
+    </div>
+
+    <script>
+        // Cargar precios desde archivo JSON
+        let precios = {};
+        
+        // Variables para el cálculo automático de variantes
+        let currentVariant = "1";
+        let currentComplementaryVariant = "4";
+        
+        // Función para cargar datos de ejemplo como fallback
+        function cargarDatosDeEjemplo() {
+            console.log("Cargando datos de ejemplo...");
+            
+            precios = {
+                "1": {
+                    "a4": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 10,
+                                "90": 12,
+                                "100": 15
+                            },
+                            "doble": {
+                                "80": 18,
+                                "90": 20,
+                                "100": 24
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 25,
+                                "90": 30,
+                                "100": 35
+                            },
+                            "doble": {
+                                "80": 45,
+                                "90": 50,
+                                "100": 60
+                            }
+                        }
+                    },
+                    "a3": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 20,
+                                "90": 24,
+                                "100": 30
+                            },
+                            "doble": {
+                                "80": 36,
+                                "90": 40,
+                                "100": 48
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 50,
+                                "90": 60,
+                                "100": 70
+                            },
+                            "doble": {
+                                "80": 90,
+                                "90": 100,
+                                "100": 120
+                            }
+                        }
+                    }
+                },
+                "2": {
+                    "a4": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 8,
+                                "90": 10,
+                                "100": 12
+                            },
+                            "doble": {
+                                "80": 15,
+                                "90": 17,
+                                "100": 20
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 20,
+                                "90": 24,
+                                "100": 28
+                            },
+                            "doble": {
+                                "80": 36,
+                                "90": 40,
+                                "100": 48
+                            }
+                        }
+                    }
+                },
+                "3": {
+                    "a4": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 6,
+                                "90": 8,
+                                "100": 10
+                            },
+                            "doble": {
+                                "80": 12,
+                                "90": 14,
+                                "100": 16
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 15,
+                                "90": 18,
+                                "100": 21
+                            },
+                            "doble": {
+                                "80": 27,
+                                "90": 30,
+                                "100": 36
+                            }
+                        }
+                    }
+                },
+                "4": {
+                    "a4": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 12,
+                                "90": 14,
+                                "100": 18
+                            },
+                            "doble": {
+                                "80": 22,
+                                "90": 24,
+                                "100": 29
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 30,
+                                "90": 36,
+                                "100": 42
+                            },
+                            "doble": {
+                                "80": 54,
+                                "90": 60,
+                                "100": 72
+                            }
+                        }
+                    }
+                },
+                "5": {
+                    "a4": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 10,
+                                "90": 12,
+                                "100": 14
+                            },
+                            "doble": {
+                                "80": 18,
+                                "90": 20,
+                                "100": 24
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 24,
+                                "90": 29,
+                                "100": 34
+                            },
+                            "doble": {
+                                "80": 43,
+                                "90": 48,
+                                "100": 58
+                            }
+                        }
+                    }
+                },
+                "6": {
+                    "a4": {
+                        "blancoNegro": {
+                            "simple": {
+                                "80": 8,
+                                "90": 10,
+                                "100": 12
+                            },
+                            "doble": {
+                                "80": 14,
+                                "90": 17,
+                                "100": 20
+                            }
+                        },
+                        "color": {
+                            "simple": {
+                                "80": 18,
+                                "90": 22,
+                                "100": 26
+                            },
+                            "doble": {
+                                "80": 32,
+                                "90": 36,
+                                "100": 43
+                            }
+                        }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 5,
+                    "mediano": 10,
+                    "grande": 15,
+                    "mas_grande": 20,
+                    "gigante": 25
+                }
+            };
+            
+            console.log("Datos de ejemplo cargados exitosamente");
+            alert("Se cargaron datos de ejemplo. La aplicación funcionará en modo demo.");
+        }
+
+        // VERSIÓN MEJORADA DE CARGAR PRECIOS
+        async function cargarPrecios() {
+            const url = "./preciosani2.json";
+            console.log("Intentando cargar precios desde:", url);
+            
+            try {
+                const resp = await fetch(url);
+                
+                console.log("Respuesta recibida. Status:", resp.status);
+                
+                if (!resp.ok) {
+                    throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+                }
+                
+                const text = await resp.text();
+                console.log("Contenido recibido (primeros 500 caracteres):", text.substring(0, 500));
+                
+                // Verificar que el texto no esté vacío
+                if (!text.trim()) {
+                    throw new Error("El archivo está vacío");
+                }
+                
+                precios = JSON.parse(text);
+                console.log("JSON parseado exitosamente. Claves disponibles:", Object.keys(precios));
+                
+                // Verificar que la estructura básica sea correcta
+                if (!precios["1"]) {
+                    console.warn("Advertencia: La estructura del JSON puede no ser la esperada");
+                }
+                
+                init();
+                
+            } catch (error) {
+                console.error('Error detallado al cargar precios:', error);
+                
+                if (error instanceof SyntaxError) {
+                    alert('Error: El archivo preciosani2.json tiene formato JSON inválido. Verifica la sintaxis del archivo.');
+                } else if (error.message.includes("HTTP")) {
+                    alert(`Error HTTP: ${error.message}\n\nVerifica que el archivo preciosani2.json exista en la misma carpeta que este HTML.`);
+                } else if (error.message.includes("vacío")) {
+                    alert('Error: El archivo preciosani2.json está vacío. Agrega datos válidos o usa los datos de ejemplo.');
+                } else {
+                    alert(`Error al cargar los precios: ${error.message}\n\nVerifica que el archivo preciosani2.json exista y sea accesible.`);
+                }
+                
+                // Cargar datos de ejemplo como fallback
+                cargarDatosDeEjemplo();
+                init();
+            }
+        }
+
+        // Iniciar carga de precios
+        cargarPrecios();        
+        
+        // Variables globales
+        let reservaBn = {
+            effectiveTotal: 0,
+            cardTotal: 0,
+            hojas: 0,
+            tamaño: "a4",
+            copiasSimples: 0,
+            copiasDobles: 0,
+            totalCopias: 0
+        };
+        
+        // Elementos del DOM
+        const variantInput = document.getElementById('price-variant');
+        const variantComplementariaInput = document.getElementById('price-variant-complementaria');
+        
+        // Elementos para mostrar info de copias
+        const copiasSimpleSpan = document.getElementById('copias-simple');
+        const copiasDobleSpan = document.getElementById('copias-doble');
+        const totalCopiasSpan = document.getElementById('total-copias');
+        const listasSeleccionadasDiv = document.getElementById('listas-seleccionadas');
+        const listaEfectivoSpan = document.getElementById('lista-efectivo');
+        const listaTarjetaSpan = document.getElementById('lista-tarjeta');
+        
+        // Elementos para mostrar en la comparación
+        const comparisonListaEfectivo = document.getElementById('comparison-lista-efectivo');
+        const comparisonListaTarjeta = document.getElementById('comparison-lista-tarjeta');
+        
+        // Elementos para el detalle de listas utilizadas
+        const detalleListasDiv = document.getElementById('detalle-listas');
+        const nombreListaEfectivo = document.getElementById('nombre-lista-efectivo');
+        const descListaEfectivo = document.getElementById('desc-lista-efectivo');
+        const nombreListaTarjeta = document.getElementById('nombre-lista-tarjeta');
+        const descListaTarjeta = document.getElementById('desc-lista-tarjeta');
+        const detalleTotalCopias = document.getElementById('detalle-total-copias');
+        
+        // Resto de elementos del DOM (existentes)...
+        
+        // Función para determinar la variante según la cantidad de copias
+        function determinarVariantePorCopias(copiasSimples, copiasDobles) {
+            // Calcular total de copias (1 doble faz = 2 simples)
+            const totalCopias = copiasSimples + (copiasDobles * 2);
+            
+            // Determinar variantes según el rango de copias
+            let varianteEfectivo, varianteTarjeta, descripcion;
+            
+            if (totalCopias <= 50) {
+                varianteEfectivo = "1";
+                varianteTarjeta = "4";
+                descripcion = "Hasta 50 copias";
+            } else if (totalCopias <= 200) {
+                varianteEfectivo = "2";
+                varianteTarjeta = "5";
+                descripcion = "51-200 copias";
+            } else {
+                varianteEfectivo = "3";
+                varianteTarjeta = "6";
+                descripcion = "201+ copias";
+            }
+            
+            return {
+                efectivo: varianteEfectivo,
+                tarjeta: varianteTarjeta,
+                totalCopias: totalCopias,
+                descripcion: descripcion
+            };
+        }
+        
+        // Función para actualizar la información de copias y variantes
+        function actualizarInfoCopias() {
+            const copiasSimples = parseInt(cantidadBwSimple.value) || 0;
+            const copiasDobles = parseInt(cantidadBwDoble.value) || 0;
+            
+            // Calcular total de copias (1 doble faz = 2 simples)
+            const totalCopias = copiasSimples + (copiasDobles * 2);
+            
+            // Actualizar elementos de visualización
+            copiasSimpleSpan.textContent = copiasSimples;
+            copiasDobleSpan.textContent = copiasDobles;
+            totalCopiasSpan.textContent = totalCopias;
+            
+            // Determinar variantes según la cantidad de copias
+            const variantes = determinarVariantePorCopias(copiasSimples, copiasDobles);
+            
+            // Actualizar variantes actuales
+            currentVariant = variantes.efectivo;
+            currentComplementaryVariant = variantes.tarjeta;
+            
+            // Actualizar inputs ocultos
+            variantInput.value = currentVariant;
+            variantComplementariaInput.value = currentComplementaryVariant;
+            
+            // Actualizar elementos de visualización de listas
+            listaEfectivoSpan.textContent = `Lista ${currentVariant}`;
+            listaTarjetaSpan.textContent = `Lista ${currentComplementaryVariant}`;
+            comparisonListaEfectivo.textContent = `Lista ${currentVariant}`;
+            comparisonListaTarjeta.textContent = `Lista ${currentComplementaryVariant}`;
+            
+            // Actualizar descripciones
+            descListaEfectivo.textContent = `Lista ${currentVariant} - ${variantes.descripcion}`;
+            descListaTarjeta.textContent = `Lista ${currentComplementaryVariant} - ${variantes.descripcion}`;
+            nombreListaEfectivo.textContent = `Lista ${currentVariant}`;
+            nombreListaTarjeta.textContent = `Lista ${currentComplementaryVariant}`;
+            detalleTotalCopias.textContent = variantes.totalCopias;
+            
+            // Mostrar detalle de listas si hay copias
+            if (totalCopias > 0) {
+                detalleListasDiv.style.display = 'block';
+            } else {
+                detalleListasDiv.style.display = 'none';
+            }
+            
+            // Actualizar en reserva
+            reservaBn.copiasSimples = copiasSimples;
+            reservaBn.copiasDobles = copiasDobles;
+            reservaBn.totalCopias = variantes.totalCopias;
+        }
+        
+        // Modificar la función calcularCotizacionBn para incluir actualización de variantes
+        function calcularCotizacionBn() {
+            const tamaño = tamañoBwInput.value;
+            const gramaje = gramajeBw.value;
+            const cantidadSimple = parseInt(cantidadBwSimple.value) || 0;
+            const cantidadDoble = parseInt(cantidadBwDoble.value) || 0;
+            
+            // Actualizar información de copias y variantes
+            actualizarInfoCopias();
+            
+            // Obtener precios actuales según la variante
+            const preciosActuales = precios[currentVariant];
+            const preciosComplementarios = precios[currentComplementaryVariant];
+            
+            let precioSimple = 0;
+            let precioDoble = 0;
+            let precioSimpleCard = 0;
+            let precioDobleCard = 0;
+            
+            // Verificar si los precios existen en el JSON
+            if (preciosActuales && 
+                preciosActuales[tamaño] && 
+                preciosActuales[tamaño].blancoNegro &&
+                preciosActuales[tamaño].blancoNegro.simple &&
+                preciosActuales[tamaño].blancoNegro.simple[gramaje] &&
+                preciosActuales[tamaño].blancoNegro.doble &&
+                preciosActuales[tamaño].blancoNegro.doble[gramaje]) {
+                
+                // Obtener precios según tamaño y gramaje (efectivo)
+                precioSimple = preciosActuales[tamaño].blancoNegro.simple[gramaje];
+                precioDoble = preciosActuales[tamaño].blancoNegro.doble[gramaje];
+                
+                // Obtener precios según tamaño y gramaje (tarjeta)
+                if (preciosComplementarios && 
+                    preciosComplementarios[tamaño] && 
+                    preciosComplementarios[tamaño].blancoNegro &&
+                    preciosComplementarios[tamaño].blancoNegro.simple &&
+                    preciosComplementarios[tamaño].blancoNegro.simple[gramaje] &&
+                    preciosComplementarios[tamaño].blancoNegro.doble &&
+                    preciosComplementarios[tamaño].blancoNegro.doble[gramaje]) {
+                    
+                    precioSimpleCard = preciosComplementarios[tamaño].blancoNegro.simple[gramaje];
+                    precioDobleCard = preciosComplementarios[tamaño].blancoNegro.doble[gramaje];
+                }
+            }
+            
+            // Calcular costo de impresiones (efectivo)
+            const costoSimple = cantidadSimple * precioSimple;
+            const costoDoble = cantidadDoble * precioDoble;
+            
+            // Calcular costo de impresiones (tarjeta)
+            const costoSimpleCard = cantidadSimple * precioSimpleCard;
+            const costoDobleCard = cantidadDoble * precioDobleCard;
+            
+            // Calcular total de hojas
+            const totalHojas = cantidadSimple + cantidadDoble;
+            
+            // Calcular totales
+            const totalEfectivo = costoSimple + costoDoble;
+            const totalTarjeta = costoSimpleCard + costoDobleCard;
+            
+            // Actualizar resumen (mostramos solo el efectivo en esta sección)
+            resumenBwSimple.textContent = `$${costoSimple}`;
+            resumenBwDoble.textContent = `$${costoDoble}`;
+            resumenBwHojas.textContent = totalHojas;
+            resumenBwTotal.textContent = `$${totalEfectivo}`;
+            
+            // Guardar en reserva
+            reservaBn = {
+                effectiveTotal: totalEfectivo,
+                cardTotal: totalTarjeta,
+                hojas: totalHojas,
+                tamaño: tamaño,
+                copiasSimples: cantidadSimple,
+                copiasDobles: cantidadDoble,
+                totalCopias: reservaBn.totalCopias
+            };
+            
+            // Actualizar opciones de gramaje basadas en la nueva variante
+            actualizarOpcionesGramaje();
+            
+            // Actualizar precios mostrados
+            actualizarPreciosMostrados();
+            
+            // Actualizar precios de anillado
+            actualizarPreciosAnillado();
+            
+            // Actualizar resumen de reserva
+            reservaBnTotal.textContent = `$${totalEfectivo}`;
+            reservaBnHojas.textContent = totalHojas;
+        }
+        
+        // Modificar la función calcularCotizacionColor para usar las variantes correctas
+        function calcularCotizacionColor() {
+            const tamaño = tamañoColorInput.value;
+            const gramaje = gramajeColor.value;
+            const cantidadSimple = parseInt(cantidadColorSimple.value) || 0;
+            const cantidadDoble = parseInt(cantidadColorDoble.value) || 0;
+            
+            // Obtener precios actuales según la variante
+            const preciosActuales = precios[currentVariant];
+            const preciosComplementarios = precios[currentComplementaryVariant];
+            
+            let precioSimple = 0;
+            let precioDoble = 0;
+            let precioSimpleCard = 0;
+            let precioDobleCard = 0;
+            let costoAnillado = 0;
+            let costoAnilladoCard = 0;
+            
+            // Verificar si los precios de impresión existen en el JSON
+            if (preciosActuales && 
+                preciosActuales[tamaño] && 
+                preciosActuales[tamaño].color &&
+                preciosActuales[tamaño].color.simple &&
+                preciosActuales[tamaño].color.simple[gramaje] &&
+                preciosActuales[tamaño].color.doble &&
+                preciosActuales[tamaño].color.doble[gramaje]) {
+                
+                // Obtener precios según tamaño y gramaje (efectivo)
+                precioSimple = preciosActuales[tamaño].color.simple[gramaje];
+                precioDoble = preciosActuales[tamaño].color.doble[gramaje];
+                
+                // Obtener precios según tamaño y gramaje (tarjeta)
+                if (preciosComplementarios && 
+                    preciosComplementarios[tamaño] && 
+                    preciosComplementarios[tamaño].color &&
+                    preciosComplementarios[tamaño].color.simple &&
+                    preciosComplementarios[tamaño].color.simple[gramaje] &&
+                    preciosComplementarios[tamaño].color.doble &&
+                    preciosComplementarios[tamaño].color.doble[gramaje]) {
+                    
+                    precioSimpleCard = preciosComplementarios[tamaño].color.simple[gramaje];
+                    precioDobleCard = preciosComplementarios[tamaño].color.doble[gramaje];
+                }
+            }
+            
+            // Calcular costo de impresiones (efectivo)
+            const costoSimple = cantidadSimple * precioSimple;
+            const costoDoble = cantidadDoble * precioDoble;
+            
+            // Calcular costo de impresiones (tarjeta)
+            const costoSimpleCard = cantidadSimple * precioSimpleCard;
+            const costoDobleCard = cantidadDoble * precioDobleCard;
+            
+            // Calcular total de hojas
+            const totalHojas = cantidadSimple + cantidadDoble;
+            
+            // Calcular costo de anillado si está seleccionado
+            if (anilladoCheckbox.checked) {
+                const tipoAnilladoSeleccionado = tipoAnillado.value;
+                
+                if (preciosActuales && preciosActuales.anillado) {
+                    costoAnillado = preciosActuales.anillado[tipoAnilladoSeleccionado] || 0;
+                }
+                
+                if (preciosComplementarios && preciosComplementarios.anillado) {
+                    costoAnilladoCard = preciosComplementarios.anillado[tipoAnilladoSeleccionado] || 0;
+                }
+            }
+            
+            // Calcular subtotales
+            const subtotalColorEfectivo = costoSimple + costoDoble;
+            const subtotalColorTarjeta = costoSimpleCard + costoDobleCard;
+            
+            // Calcular totales generales
+            const totalGeneralEfectivo = reservaBn.effectiveTotal + subtotalColorEfectivo + costoAnillado;
+            const totalGeneralTarjeta = reservaBn.cardTotal + subtotalColorTarjeta + costoAnilladoCard;
+            
+            // Actualizar comparación de precios
+            updatePriceComparison(
+                costoSimple, costoDoble, totalHojas, costoAnillado, reservaBn.effectiveTotal, totalGeneralEfectivo,
+                costoSimpleCard, costoDobleCard, totalHojas, costoAnilladoCard, reservaBn.cardTotal, totalGeneralTarjeta
+            );
+            
+            // Calcular y mostrar diferencia
+            updatePriceDifference(totalGeneralEfectivo, totalGeneralTarjeta);
+        }
+        
+        // Eliminar la función getComplementaryVariant ya que ahora la calculamos dinámicamente
+        // Modificar las funciones actualizarOpcionesGramaje, actualizarPreciosAnillado y actualizarPreciosMostrados
+        // para usar currentVariant y currentComplementaryVariant
+        
+        // Modificar la función actualizarPreciosAnillado
+        function actualizarPreciosAnillado() {
+            const preciosActuales = precios[currentVariant];
+            const preciosComplementarios = precios[currentComplementaryVariant];
+            
+            if (!preciosActuales || !preciosActuales.anillado) return;
+            
+            // Actualizar opciones de anillado
+            const anilladoOptionsSelect = document.getElementById('tipo-anillado');
+            if (anilladoOptionsSelect) {
+                anilladoOptionsSelect.innerHTML = '';
+                
+                // Obtener precios de ambas variantes
+                const precioPequeño = preciosActuales.anillado.pequeño || 0;
+                const precioComplementarioPequeño = preciosComplementarios ? (preciosComplementarios.anillado.pequeño || 0) : 0;
+                
+                const precioMediano = preciosActuales.anillado.mediano || 0;
+                const precioComplementarioMediano = preciosComplementarios ? (preciosComplementarios.anillado.mediano || 0) : 0;
+                
+                const precioGrande = preciosActuales.anillado.grande || 0;
+                const precioComplementarioGrande = preciosComplementarios ? (preciosComplementarios.anillado.grande || 0) : 0;
+                
+                const precioMasGrande = preciosActuales.anillado.mas_grande || 0;
+                const precioComplementarioMasGrande = preciosComplementarios ? (preciosComplementarios.anillado.mas_grande || 0) : 0;
+                
+                const precioGigante = preciosActuales.anillado.gigante || 0;
+                const precioComplementarioGigante = preciosComplementarios ? (preciosComplementarios.anillado.gigante || 0) : 0;
+                
+                // Pequeño
+                const optionPequeño = document.createElement('option');
+                optionPequeño.value = 'pequeño';
+                optionPequeño.textContent = `Pequeño (hasta 50 hojas) - Efectivo: $${precioPequeño} | Tarjeta: $${precioComplementarioPequeño}`;
+                anilladoOptionsSelect.appendChild(optionPequeño);
+                
+                // Mediano
+                const optionMediano = document.createElement('option');
+                optionMediano.value = 'mediano';
+                optionMediano.textContent = `Mediano (51-100 hojas) - Efectivo: $${precioMediano} | Tarjeta: $${precioComplementarioMediano}`;
+                anilladoOptionsSelect.appendChild(optionMediano);
+                
+                // Grande
+                const optionGrande = document.createElement('option');
+                optionGrande.value = 'grande';
+                optionGrande.textContent = `Grande (101-200 hojas) - Efectivo: $${precioGrande} | Tarjeta: $${precioComplementarioGrande}`;
+                anilladoOptionsSelect.appendChild(optionGrande);
+                
+                // Más Grande
+                const optionMasGrande = document.createElement('option');
+                optionMasGrande.value = 'mas_grande';
+                optionMasGrande.textContent = `Más Grande (201-500 hojas) - Efectivo: $${precioMasGrande} | Tarjeta: $${precioComplementarioMasGrande}`;
+                anilladoOptionsSelect.appendChild(optionMasGrande);
+                
+                // Gigante
+                const optionGigante = document.createElement('option');
+                optionGigante.value = 'gigante';
+                optionGigante.textContent = `Gigante (500+ hojas) - Efectivo: $${precioGigante} | Tarjeta: $${precioComplementarioGigante}`;
+                anilladoOptionsSelect.appendChild(optionGigante);
+            }
+        }
+        
+        // Modificar la función actualizarPreciosMostrados
+        function actualizarPreciosMostrados() {
+            const tamañoBw = tamañoBwInput.value;
+            const tamañoColor = tamañoColorInput.value;
+            const gramajeBwVal = gramajeBw.value;
+            const gramajeColorVal = gramajeColor.value;
+            
+            // Obtener precios actuales según la variante
+            const preciosActuales = precios[currentVariant];
+            const preciosComplementarios = precios[currentComplementaryVariant];
+            
+            // Actualizar precios B/N si existen
+            if (preciosActuales && 
+                preciosActuales[tamañoBw] && 
+                preciosActuales[tamañoBw].blancoNegro && 
+                preciosActuales[tamañoBw].blancoNegro.simple &&
+                preciosActuales[tamañoBw].blancoNegro.simple[gramajeBwVal]) {
+                
+                const precioBwSimple = preciosActuales[tamañoBw].blancoNegro.simple[gramajeBwVal];
+                const precioBwDoble = preciosActuales[tamañoBw].blancoNegro.doble[gramajeBwVal];
+                const precioBwSimpleCard = preciosComplementarios ? (preciosComplementarios[tamañoBw].blancoNegro.simple[gramajeBwVal] || 0) : 0;
+                const precioBwDobleCard = preciosComplementarios ? (preciosComplementarios[tamañoBw].blancoNegro.doble[gramajeBwVal] || 0) : 0;
+                
+                bwSimplePrice.textContent = `Precio efectivo: $${precioBwSimple} | Tarjeta: $${precioBwSimpleCard}`;
+                bwDoblePrice.textContent = `Precio efectivo: $${precioBwDoble} | Tarjeta: $${precioBwDobleCard}`;
+            } else {
+                bwSimplePrice.textContent = `Precio: -`;
+                bwDoblePrice.textContent = `Precio: -`;
+            }
+            
+            // Actualizar precios Color si existen
+            if (preciosActuales && 
+                preciosActuales[tamañoColor] && 
+                preciosActuales[tamañoColor].color && 
+                preciosActuales[tamañoColor].color.simple &&
+                preciosActuales[tamañoColor].color.simple[gramajeColorVal]) {
+                
+                const precioColorSimple = preciosActuales[tamañoColor].color.simple[gramajeColorVal];
+                const precioColorDoble = preciosActuales[tamañoColor].color.doble[gramajeColorVal];
+                const precioColorSimpleCard = preciosComplementarios ? (preciosComplementarios[tamañoColor].color.simple[gramajeColorVal] || 0) : 0;
+                const precioColorDobleCard = preciosComplementarios ? (preciosComplementarios[tamañoColor].color.doble[gramajeColorVal] || 0) : 0;
+                
+                colorSimplePrice.textContent = `Precio efectivo: $${precioColorSimple} | Tarjeta: $${precioColorSimpleCard}`;
+                colorDoblePrice.textContent = `Precio efectivo: $${precioColorDoble} | Tarjeta: $${precioColorDobleCard}`;
+            } else {
+                colorSimplePrice.textContent = `Precio: -`;
+                colorDoblePrice.textContent = `Precio: -`;
+            }
+        }
+        
+        // Modificar la función setupVariantSelectors para deshabilitar la selección manual
+        function setupVariantSelectors() {
+            // Ocultar o deshabilitar los selectores de variante ya que ahora es automático
+            const variantOptionsContainer = document.querySelector('.variant-options');
+            if (variantOptionsContainer) {
+                variantOptionsContainer.style.display = 'none';
+            }
+            
+            // Actualizar el título del selector
+            const selectorTitle = document.querySelector('.price-variant-selector h3');
+            if (selectorTitle) {
+                selectorTitle.textContent = 'Selección Automática de Listas de Precios';
+            }
+        }
+        
+        // Inicializar todo
+        function init() {
+            // Verificar si los precios están cargados
+            if (!precios || Object.keys(precios).length === 0) {
+                console.error('Los precios no se cargaron correctamente');
+                alert('No se pudieron cargar los precios. Usando datos de ejemplo.');
+                cargarDatosDeEjemplo();
+                return;
+            }
+            
+            setupVariantSelectors();
+            setupTamañoSelectors();
+            setupTabs();
+            setupAnilladoToggle();
+            setupReservarBn();
+            setupCalcularFinal();
+            setupEventListeners();
+            
+            // Actualizar selectores de gramaje basados en lo que existe en el JSON
+            actualizarOpcionesGramaje();
+            
+            // Actualizar precios de anillado
+            actualizarPreciosAnillado();
+            
+            actualizarPreciosMostrados();
+            calcularCotizacionBn();
+            calcularCotizacionColor();
+        }
+        
+        // El resto de las funciones permanecen igual...
+    </script>
+</body>
+</html>
