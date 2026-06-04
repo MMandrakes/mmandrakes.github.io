@@ -408,13 +408,13 @@
                 console.error('Error detallado al cargar precios:', error);
                 
                 if (error instanceof SyntaxError) {
-                    alert('Error: El archivo preciosani2.json tiene formato JSON inválido. Verifica la sintaxis del archivo.');
+                    alert('Error: El archivo preciosani.json tiene formato JSON inválido. Verifica la sintaxis del archivo.');
                 } else if (error.message.includes("HTTP")) {
-                    alert(`Error HTTP: ${error.message}\n\nVerifica que el archivo preciosani2.json exista en la misma carpeta que este HTML.`);
+                    alert(`Error HTTP: ${error.message}\n\nVerifica que el archivo preciosani.json exista en la misma carpeta que este HTML.`);
                 } else if (error.message.includes("vacío")) {
-                    alert('Error: El archivo preciosani2.json está vacío. Agrega datos válidos o usa los datos de ejemplo.');
+                    alert('Error: El archivo preciosani.json está vacío. Agrega datos válidos o usa los datos de ejemplo.');
                 } else {
-                    alert(`Error al cargar los precios: ${error.message}\n\nVerifica que el archivo preciosani2.json exista y sea accesible.`);
+                    alert(`Error al cargar los precios: ${error.message}\n\nVerifica que el archivo preciosani.json exista y sea accesible.`);
                 }
                 
                 // Cargar datos de ejemplo como fallback
