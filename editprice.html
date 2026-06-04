@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Precios & Anillado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .right-panel {
+            flex: 2;
+            min-width: 500px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .list-selector {
+            margin-bottom: 25px;
+        }
+        
+        .list-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .list-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .list-btn {
+            padding: 12px 20px;
+            background-color: #ecf0f1;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .list-btn:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .list-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .list-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        
+        .list-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .subsection {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }
+        
+        .subsection h4 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .price-item {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .price-item label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .gramaje-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .price-input {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .price-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .anillado-prices {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            flex: 2;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #ecf0f1;
+            color: #333;
+            flex: 1;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .json-viewer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+        }
+        
+        .json-key {
+            color: #3498db;
+        }
+        
+        .json-string {
+            color: #2ecc71;
+        }
+        
+        .json-number {
+            color: #e74c3c;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Editor de Precios & Anillado</h1>
+            <p class="subtitle">Visualiza y edita los precios por lista del archivo JSON</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="list-selector">
+                    <label>Selecciona una lista para editar:</label>
+                    <div class="list-buttons">
+                        <button class="list-btn active" data-list="1">Lista 1</button>
+                        <button class="list-btn" data-list="2">Lista 2</button>
+                        <button class="list-btn" data-list="3">Lista 3</button>
+                        <button class="list-btn" data-list="4">Lista 4</button>
+                        <button class="list-btn" data-list="5">Lista 5</button>
+                        <button class="list-btn" data-list="6">Lista 6</button>
+                    </div>
+                </div>
+                
+                <div class="list-info">
+                    <h3 id="list-name">Precio estándar</h3>
+                    <p>Edita los valores de esta lista en los campos de la derecha. Los cambios se guardarán en tiempo real en la visualización JSON.</p>
+                    <p><strong>Nota:</strong> Los valores numéricos en las etiquetas corresponden al gramaje del papel (gr).</p>
+                </div>
+                
+                <div class="section">
+                    <h3>Controles</h3>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="save-btn">Guardar Cambios</button>
+                        <button class="btn btn-secondary" id="reset-btn">Restablecer</button>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-secondary" id="download-btn" style="width: 100%;">Descargar JSON Actualizado</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Instrucciones</h3>
+                    <ol style="padding-left: 20px; margin-top: 10px;">
+                        <li>Selecciona una lista con los botones de arriba</li>
+                        <li>Modifica los valores en los campos de edición</li>
+                        <li>Los cambios se reflejarán automáticamente en la vista JSON</li>
+                        <li>Guarda los cambios con el botón "Guardar Cambios"</li>
+                        <li>Descarga el JSON actualizado si lo necesitas</li>
+                    </ol>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: #7f8c8d;">
+                        <strong>Gramaje:</strong> Los valores como "75", "150", "200", etc. corresponden al peso del papel en gramos por metro cuadrado (g/m²).
+                    </p>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="section">
+                    <h3>Edición de Precios - <span id="editing-list">Lista 1: Precio estándar</span></h3>
+                    
+                    <div class="subsection">
+                        <h4>Formato A4 - Blanco y Negro</h4>
+                        <div class="price-grid" id="a4-bn-simple"></div>
+                        
+                        <h4 style="margin-top: 15px;">Formato A4 - Blanco y Negro (Doble Cara)</h4>
+                        <div class="price-grid" id="a4-bn-doble"></div>
+                    </div>
+                    
+                    <div class="subsection">
+                        <h4>Formato A4 - Color</h4>
+                        <div class="price-grid" id="a4-color-simple"></div>
+                        
+                        <h4 style="margin-top: 15px;">Formato A4 - Color (Doble Cara)</h4>
+                        <div class="price-grid" id="a4-color-doble"></div>
+                    </div>
+                    
+                    <div class="subsection">
+                        <h4>Formato A3 - Blanco y Negro</h4>
+                        <div class="price-grid" id="a3-bn-simple"></div>
+                        
+                        <h4 style="margin-top: 15px;">Formato A3 - Blanco y Negro (Doble Cara)</h4>
+                        <div class="price-grid" id="a3-bn-doble"></div>
+                    </div>
+                    
+                    <div class="subsection">
+                        <h4>Formato A3 - Color</h4>
+                        <div class="price-grid" id="a3-color-simple"></div>
+                        
+                        <h4 style="margin-top: 15px;">Formato A3 - Color (Doble Cara)</h4>
+                        <div class="price-grid" id="a3-color-doble"></div>
+                    </div>
+                    
+                    <div class="subsection">
+                        <h4>Precios de Anillado</h4>
+                        <div class="anillado-prices" id="anillado-prices"></div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Vista JSON Actual</h3>
+                    <div class="json-viewer" id="json-viewer"></div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Editor de Precios Sani &copy; 2023 | Los cambios se guardan en la memoria del navegador</p>
+        </footer>
+    </div>
+
+    <script>
+        // Datos iniciales del JSON
+        let priceData = {
+            "1": {
+                "nombre": "Precio estándar",
+                "a4": {
+                    "blancoNegro": {
+                        "simple": { "75": 150, "150": 250, "200": 330 },
+                        "doble": { "75": 300, "150": 400, "200": 500 }
+                    },
+                    "color": {
+                        "simple": { "75": 500, "150": 700, "200": 800, "250": 1100, "300": 1200 },
+                        "doble": { "75": 900, "150": 1300, "200": 1500, "250": 2000, "300": 2200 }
+                    }
+                },
+                "a3": {
+                    "blancoNegro": {
+                        "simple": { "75": 220, "150": 370, "200": 500 },
+                        "doble": { "75": 440, "150": 600, "200": 800 }
+                    },
+                    "color": {
+                        "simple": { "75": 1000, "150": 1300, "200": 1500, "250": 1700, "300": 1800 },
+                        "doble": { "75": 1800, "150": 2400, "200": 2800, "250": 3200, "300": 3400 }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 1000,
+                    "mediano": 2000,
+                    "grande": 3000,
+                    "mas_grande": 4000,
+                    "gigante": 5000
+                }
+            },
+            "2": {
+                "nombre": "Precio Tarjeta",
+                "a4": {
+                    "blancoNegro": {
+                        "simple": { "75": 165, "150": 250, "200": 330 },
+                        "doble": { "75": 330, "150": 400, "200": 500 }
+                    },
+                    "color": {
+                        "simple": { "75": 500, "150": 700, "200": 800, "250": 1100, "300": 1200 },
+                        "doble": { "75": 900, "150": 1300, "200": 1500, "250": 2000, "300": 2200 }
+                    }
+                },
+                "a3": {
+                    "blancoNegro": {
+                        "simple": { "75": 220, "150": 370, "200": 500 },
+                        "doble": { "75": 440, "150": 600, "200": 800 }
+                    },
+                    "color": {
+                        "simple": { "75": 1000, "150": 1300, "200": 1500, "250": 1700, "300": 1800 },
+                        "doble": { "75": 1800, "150": 2400, "200": 2800, "250": 3200, "300": 3400 }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 1000,
+                    "mediano": 2000,
+                    "grande": 3000,
+                    "mas_grande": 4000,
+                    "gigante": 5000
+                }
+            },
+            "3": {
+                "nombre": "Precio Cantidad",
+                "a4": {
+                    "blancoNegro": {
+                        "simple": { "75": 120, "150": 200, "200": 280 },
+                        "doble": { "75": 250, "150": 350, "200": 450 }
+                    },
+                    "color": {
+                        "simple": { "75": 450, "150": 600, "200": 700, "250": 900, "300": 1000 },
+                        "doble": { "75": 800, "150": 1100, "200": 1300, "250": 1700, "300": 1900 }
+                    }
+                },
+                "a3": {
+                    "blancoNegro": {
+                        "simple": { "75": 200, "150": 320, "200": 420 },
+                        "doble": { "75": 400, "150": 500, "200": 650 }
+                    },
+                    "color": {
+                        "simple": { "75": 900, "150": 1100, "200": 1300, "250": 1500, "300": 1600 },
+                        "doble": { "75": 1600, "150": 2100, "200": 2400, "250": 2800, "300": 3000 }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 900,
+                    "mediano": 1800,
+                    "grande": 2700,
+                    "mas_grande": 3600,
+                    "gigante": 4500
+                }
+            },
+            "4": {
+                "nombre": "Precio Grandes Volúmenes",
+                "a4": {
+                    "blancoNegro": {
+                        "simple": { "75": 110, "150": 180, "200": 250 },
+                        "doble": { "75": 220, "150": 300, "200": 400 }
+                    },
+                    "color": {
+                        "simple": { "75": 400, "150": 550, "200": 650, "250": 850, "300": 950 },
+                        "doble": { "75": 750, "150": 1000, "200": 1200, "250": 1600, "300": 1800 }
+                    }
+                },
+                "a3": {
+                    "blancoNegro": {
+                        "simple": { "75": 180, "150": 280, "200": 380 },
+                        "doble": { "75": 360, "150": 450, "200": 550 }
+                    },
+                    "color": {
+                        "simple": { "75": 800, "150": 1000, "200": 1200, "250": 1400, "300": 1500 },
+                        "doble": { "75": 1500, "150": 1900, "200": 2200, "250": 2600, "300": 2800 }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 800,
+                    "mediano": 1600,
+                    "grande": 2400,
+                    "mas_grande": 3200,
+                    "gigante": 4000
+                }
+            },
+            "5": {
+                "nombre": "Precio Empresarial",
+                "a4": {
+                    "blancoNegro": {
+                        "simple": { "75": 140, "150": 230, "200": 310 },
+                        "doble": { "75": 280, "150": 380, "200": 480 }
+                    },
+                    "color": {
+                        "simple": { "75": 480, "150": 650, "200": 750, "250": 1000, "300": 1100 },
+                        "doble": { "75": 850, "150": 1200, "200": 1400, "250": 1900, "300": 2100 }
+                    }
+                },
+                "a3": {
+                    "blancoNegro": {
+                        "simple": { "75": 210, "150": 350, "200": 470 },
+                        "doble": { "75": 420, "150": 550, "200": 700 }
+                    },
+                    "color": {
+                        "simple": { "75": 950, "150": 1250, "200": 1450, "250": 1650, "300": 1750 },
+                        "doble": { "75": 1700, "150": 2300, "200": 2600, "250": 3100, "300": 3300 }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 950,
+                    "mediano": 1900,
+                    "grande": 2850,
+                    "mas_grande": 3800,
+                    "gigante": 4750
+                }
+            },
+            "6": {
+                "nombre": "Precio Especial",
+                "a4": {
+                    "blancoNegro": {
+                        "simple": { "75": 130, "150": 210, "200": 290 },
+                        "doble": { "75": 260, "150": 350, "200": 440 }
+                    },
+                    "color": {
+                        "simple": { "75": 420, "150": 580, "200": 680, "250": 920, "300": 1020 },
+                        "doble": { "75": 780, "150": 1050, "200": 1250, "250": 1750, "300": 1950 }
+                    }
+                },
+                "a3": {
+                    "blancoNegro": {
+                        "simple": { "75": 190, "150": 310, "200": 410 },
+                        "doble": { "75": 380, "150": 480, "200": 590 }
+                    },
+                    "color": {
+                        "simple": { "75": 850, "150": 1100, "200": 1300, "250": 1500, "300": 1600 },
+                        "doble": { "75": 1550, "150": 2000, "200": 2300, "250": 2700, "300": 2900 }
+                    }
+                },
+                "anillado": {
+                    "pequeño": 850,
+                    "mediano": 1700,
+                    "grande": 2550,
+                    "mas_grande": 3400,
+                    "gigante": 4250
+                }
+            }
+        };
+
+        // Estado actual
+        let currentList = "1";
+        let originalData = JSON.parse(JSON.stringify(priceData)); // Copia de seguridad
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar botones de lista
+            document.querySelectorAll('.list-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Actualizar botón activo
+                    document.querySelectorAll('.list-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Cambiar lista actual
+                    currentList = this.getAttribute('data-list');
+                    loadListData(currentList);
+                    updateJsonViewer();
+                });
+            });
+            
+            // Configurar botones de acción
+            document.getElementById('save-btn').addEventListener('click', saveChanges);
+            document.getElementById('reset-btn').addEventListener('click', resetChanges);
+            document.getElementById('download-btn').addEventListener('click', downloadJson);
+            
+            // Cargar lista inicial
+            loadListData(currentList);
+            updateJsonViewer();
+        });
+
+        // Cargar datos de una lista específica
+        function loadListData(listId) {
+            const listData = priceData[listId];
+            
+            // Actualizar información de la lista
+            document.getElementById('list-name').textContent = listData.nombre;
+            document.getElementById('editing-list').textContent = `Lista ${listId}: ${listData.nombre}`;
+            
+            // Crear campos de entrada para A4 - Blanco y Negro Simple
+            createPriceInputs('a4-bn-simple', listData.a4.blancoNegro.simple, 'a4', 'blancoNegro', 'simple');
+            
+            // Crear campos de entrada para A4 - Blanco y Negro Doble
+            createPriceInputs('a4-bn-doble', listData.a4.blancoNegro.doble, 'a4', 'blancoNegro', 'doble');
+            
+            // Crear campos de entrada para A4 - Color Simple
+            createPriceInputs('a4-color-simple', listData.a4.color.simple, 'a4', 'color', 'simple');
+            
+            // Crear campos de entrada para A4 - Color Doble
+            createPriceInputs('a4-color-doble', listData.a4.color.doble, 'a4', 'color', 'doble');
+            
+            // Crear campos de entrada para A3 - Blanco y Negro Simple
+            createPriceInputs('a3-bn-simple', listData.a3.blancoNegro.simple, 'a3', 'blancoNegro', 'simple');
+            
+            // Crear campos de entrada para A3 - Blanco y Negro Doble
+            createPriceInputs('a3-bn-doble', listData.a3.blancoNegro.doble, 'a3', 'blancoNegro', 'doble');
+            
+            // Crear campos de entrada para A3 - Color Simple
+            createPriceInputs('a3-color-simple', listData.a3.color.simple, 'a3', 'color', 'simple');
+            
+            // Crear campos de entrada para A3 - Color Doble
+            createPriceInputs('a3-color-doble', listData.a3.color.doble, 'a3', 'color', 'doble');
+            
+            // Crear campos de entrada para anillado
+            createAnilladoInputs('anillado-prices', listData.anillado);
+        }
+
+        // Crear campos de entrada para precios
+        function createPriceInputs(containerId, prices, size, colorType, faceType) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            for (const [gramaje, price] of Object.entries(prices)) {
+                const priceItem = document.createElement('div');
+                priceItem.className = 'price-item';
+                
+                const label = document.createElement('label');
+                label.innerHTML = `<span class="gramaje-label">${gramaje} gr</span>`;
+                
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'price-input';
+                input.value = price;
+                input.min = 0;
+                input.placeholder = 'Precio';
+                input.setAttribute('data-size', size);
+                input.setAttribute('data-color', colorType);
+                input.setAttribute('data-face', faceType);
+                input.setAttribute('data-gramaje', gramaje);
+                
+                // Evento para actualizar datos cuando cambia el valor
+                input.addEventListener('input', function() {
+                    updatePriceValue(
+                        this.getAttribute('data-size'),
+                        this.getAttribute('data-color'),
+                        this.getAttribute('data-face'),
+                        this.getAttribute('data-gramaje'),
+                        parseInt(this.value) || 0
+                    );
+                    updateJsonViewer();
+                });
+                
+                priceItem.appendChild(label);
+                priceItem.appendChild(input);
+                container.appendChild(priceItem);
+            }
+        }
+
+        // Crear campos de entrada para anillado
+        function createAnilladoInputs(containerId, anilladoPrices) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            for (const [size, price] of Object.entries(anilladoPrices)) {
+                const priceItem = document.createElement('div');
+                priceItem.className = 'price-item';
+                
+                const label = document.createElement('label');
+                // Convertir clave a nombre legible
+                const sizeNames = {
+                    'pequeño': 'Tamaño Pequeño',
+                    'mediano': 'Tamaño Mediano',
+                    'grande': 'Tamaño Grande',
+                    'mas_grande': 'Tamaño Más Grande',
+                    'gigante': 'Tamaño Gigante'
+                };
+                label.textContent = sizeNames[size] || size;
+                
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'price-input';
+                input.value = price;
+                input.min = 0;
+                input.placeholder = 'Precio';
+                input.setAttribute('data-anillado', size);
+                
+                // Evento para actualizar datos cuando cambia el valor
+                input.addEventListener('input', function() {
+                    updateAnilladoValue(
+                        this.getAttribute('data-anillado'),
+                        parseInt(this.value) || 0
+                    );
+                    updateJsonViewer();
+                });
+                
+                priceItem.appendChild(label);
+                priceItem.appendChild(input);
+                container.appendChild(priceItem);
+            }
+        }
+
+        // Actualizar valor de precio
+        function updatePriceValue(size, colorType, faceType, gramaje, value) {
+            priceData[currentList][size][colorType][faceType][gramaje] = value;
+        }
+
+        // Actualizar valor de anillado
+        function updateAnilladoValue(size, value) {
+            priceData[currentList].anillado[size] = value;
+        }
+
+        // Actualizar visor JSON
+        function updateJsonViewer() {
+            const viewer = document.getElementById('json-viewer');
+            const formattedJson = syntaxHighlight(JSON.stringify(priceData, null, 2));
+            viewer.innerHTML = formattedJson;
+        }
+
+        // Resaltar sintaxis JSON
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // Guardar cambios
+        function saveChanges() {
+            // En una aplicación real, aquí enviaríamos los datos al servidor
+            // Por ahora, solo guardamos en localStorage
+            localStorage.setItem('sani-price-data', JSON.stringify(priceData));
+            alert('Cambios guardados correctamente en el navegador.');
+        }
+
+        // Restablecer cambios
+        function resetChanges() {
+            if (confirm('¿Estás seguro de que quieres restablecer todos los cambios? Se volverán a los valores originales.')) {
+                // Restaurar desde la copia de seguridad
+                priceData = JSON.parse(JSON.stringify(originalData));
+                loadListData(currentList);
+                updateJsonViewer();
+                alert('Cambios restablecidos a los valores originales.');
+            }
+        }
+
+        // Descargar JSON
+        function downloadJson() {
+            const dataStr = JSON.stringify(priceData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `preciosani_actualizado_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Cargar datos guardados del localStorage si existen
+        const savedData = localStorage.getItem('sani-price-data');
+        if (savedData) {
+            try {
+                priceData = JSON.parse(savedData);
+                // Actualizar también la copia de seguridad
+                originalData = JSON.parse(JSON.stringify(priceData));
+            } catch(e) {
+                console.log("No se pudieron cargar datos guardados:", e);
+            }
+        }
+    </script>
+</body>
+</html>
