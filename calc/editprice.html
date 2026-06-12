@@ -115,6 +115,22 @@
             color: #2c3e50;
             margin-bottom: 10px;
         }
+
+        .shared-note {
+            margin-top: 10px;
+            padding: 12px;
+            background-color: #eef6ff;
+            border-left: 4px solid #3498db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .sync-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
         
         .section {
             margin-bottom: 30px;
@@ -267,7 +283,7 @@
     <div class="container">
         <header>
             <h1>Editor de Precios & Anillado</h1>
-            <p class="subtitle">Visualiza y edita los precios por lista del archivo JSON</p>
+            <p class="subtitle">Edita las listas B/N por cantidad y comparte color/anillado entre todas las listas</p>
         </header>
         
         <div class="main-content">
@@ -275,19 +291,22 @@
                 <div class="list-selector">
                     <label>Selecciona una lista para editar:</label>
                     <div class="list-buttons">
-                        <button class="list-btn active" data-list="1">Lista 1</button>
-                        <button class="list-btn" data-list="2">Lista 2</button>
-                        <button class="list-btn" data-list="3">Lista 3</button>
-                        <button class="list-btn" data-list="4">Lista 4</button>
-                        <button class="list-btn" data-list="5">Lista 5</button>
-                        <button class="list-btn" data-list="6">Lista 6</button>
+                        <button class="list-btn active" data-list="1">Precio Efectivo</button>
+                        <button class="list-btn" data-list="2">Precio Efectivo+</button>
+                        <button class="list-btn" data-list="3">Precio Efectivo++</button>
+                        <button class="list-btn" data-list="4">Precio Tarjeta</button>
+                        <button class="list-btn" data-list="5">Precio Tarjeta+</button>
+                        <button class="list-btn" data-list="6">Precio Tarjeta++</button>
                     </div>
                 </div>
                 
                 <div class="list-info">
-                    <h3 id="list-name">Precio estándar</h3>
-                    <p>Edita los valores de esta lista en los campos de la derecha. Los cambios se guardarán en tiempo real en la visualización JSON.</p>
+                    <h3 id="list-name">Precio Efectivo</h3>
+                    <p>Edita los valores B/N de la lista seleccionada en los campos de la derecha. Color y anillado se sincronizan en todas las listas para simplificar el mantenimiento.</p>
                     <p><strong>Nota:</strong> Los valores numéricos en las etiquetas corresponden al gramaje del papel (gr).</p>
+                    <div class="shared-note">
+                        <strong>Bloques compartidos:</strong> Color y anillado se actualizan en todas las listas al editar cualquiera de sus valores.
+                    </div>
                 </div>
                 
                 <div class="section">
@@ -298,6 +317,9 @@
                     </div>
                     <div style="margin-top: 15px;">
                         <button class="btn btn-secondary" id="download-btn" style="width: 100%;">Descargar JSON Actualizado</button>
+                    </div>
+                    <div class="sync-actions">
+                        <button class="btn btn-secondary" id="sync-shared-btn">Sincronizar color y anillado</button>
                     </div>
                 </div>
                 
@@ -374,7 +396,7 @@
         // Datos iniciales del JSON
         let priceData = {
             "1": {
-                "nombre": "Precio estándar",
+                "nombre": "Precio Efectivo",
                 "a4": {
                     "blancoNegro": {
                         "simple": { "75": 150, "150": 250, "200": 330 },
@@ -404,7 +426,7 @@
                 }
             },
             "2": {
-                "nombre": "Precio Tarjeta",
+                "nombre": "Precio Efectivo+",
                 "a4": {
                     "blancoNegro": {
                         "simple": { "75": 165, "150": 250, "200": 330 },
@@ -434,7 +456,7 @@
                 }
             },
             "3": {
-                "nombre": "Precio Cantidad",
+                "nombre": "Precio Efectivo++",
                 "a4": {
                     "blancoNegro": {
                         "simple": { "75": 120, "150": 200, "200": 280 },
@@ -464,7 +486,7 @@
                 }
             },
             "4": {
-                "nombre": "Precio Grandes Volúmenes",
+                "nombre": "Precio Tarjeta",
                 "a4": {
                     "blancoNegro": {
                         "simple": { "75": 110, "150": 180, "200": 250 },
@@ -494,7 +516,7 @@
                 }
             },
             "5": {
-                "nombre": "Precio Empresarial",
+                "nombre": "Precio Tarjeta+",
                 "a4": {
                     "blancoNegro": {
                         "simple": { "75": 140, "150": 230, "200": 310 },
@@ -524,7 +546,7 @@
                 }
             },
             "6": {
-                "nombre": "Precio Especial",
+                "nombre": "Precio Tarjeta++",
                 "a4": {
                     "blancoNegro": {
                         "simple": { "75": 130, "150": 210, "200": 290 },
@@ -579,6 +601,7 @@
             document.getElementById('save-btn').addEventListener('click', saveChanges);
             document.getElementById('reset-btn').addEventListener('click', resetChanges);
             document.getElementById('download-btn').addEventListener('click', downloadJson);
+            document.getElementById('sync-shared-btn').addEventListener('click', syncSharedValuesToGroup);
             
             // Cargar lista inicial
             loadListData(currentList);
@@ -588,10 +611,18 @@
         // Cargar datos de una lista específica
         function loadListData(listId) {
             const listData = priceData[listId];
+            const listTitles = {
+                '1': 'Precio Efectivo',
+                '2': 'Precio Efectivo+',
+                '3': 'Precio Efectivo++',
+                '4': 'Precio Tarjeta',
+                '5': 'Precio Tarjeta+',
+                '6': 'Precio Tarjeta++'
+            };
             
             // Actualizar información de la lista
             document.getElementById('list-name').textContent = listData.nombre;
-            document.getElementById('editing-list').textContent = `Lista ${listId}: ${listData.nombre}`;
+            document.getElementById('editing-list').textContent = `Lista ${listId}: ${listTitles[listId] || listData.nombre}`;
             
             // Crear campos de entrada para A4 - Blanco y Negro Simple
             createPriceInputs('a4-bn-simple', listData.a4.blancoNegro.simple, 'a4', 'blancoNegro', 'simple');
@@ -708,11 +739,61 @@
         // Actualizar valor de precio
         function updatePriceValue(size, colorType, faceType, gramaje, value) {
             priceData[currentList][size][colorType][faceType][gramaje] = value;
+
+            if (colorType === 'color') {
+                const currentGroup = getListGroup(currentList);
+                Object.keys(priceData).forEach(listId => {
+                    if (getListGroup(listId) === currentGroup) {
+                        priceData[listId][size][colorType][faceType][gramaje] = value;
+                    }
+                });
+            }
         }
 
         // Actualizar valor de anillado
         function updateAnilladoValue(size, value) {
             priceData[currentList].anillado[size] = value;
+
+            const currentGroup = getListGroup(currentList);
+            Object.keys(priceData).forEach(listId => {
+                if (getListGroup(listId) === currentGroup) {
+                    priceData[listId].anillado[size] = value;
+                }
+            });
+        }
+
+        function getListGroup(listId) {
+            return Number(listId) <= 3 ? 'efectivo' : 'tarjeta';
+        }
+
+        // Sincronizar color y anillado con la lista actual dentro de su grupo
+        function syncSharedValuesToGroup() {
+            const sourceList = priceData[currentList];
+            const currentGroup = getListGroup(currentList);
+
+            Object.keys(priceData).forEach(listId => {
+                if (getListGroup(listId) !== currentGroup) {
+                    return;
+                }
+
+                ['a4', 'a3'].forEach(size => {
+                    ['color'].forEach(colorType => {
+                        ['simple', 'doble'].forEach(faceType => {
+                            Object.keys(sourceList[size][colorType][faceType]).forEach(gramaje => {
+                                priceData[listId][size][colorType][faceType][gramaje] = sourceList[size][colorType][faceType][gramaje];
+                            });
+                        });
+                    });
+                });
+
+                Object.keys(sourceList.anillado).forEach(key => {
+                    priceData[listId].anillado[key] = sourceList.anillado[key];
+                });
+            });
+
+            loadListData(currentList);
+            updateJsonViewer();
+            alert(`Color y anillado sincronizados en las listas de ${currentGroup}.`);
         }
 
         // Actualizar visor JSON
